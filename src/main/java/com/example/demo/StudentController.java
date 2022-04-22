@@ -13,25 +13,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+//@RequestMapping("/api/v1")
 @AllArgsConstructor
 public class StudentController {
 
   private final StudentRepository studentRepository;
-
-
-  @PostConstruct
-  private void postConstruct() {
-    Student engStudent = new Student(
-        "Eng2015001", "John Doe", Student.Gender.MALE, 1);
-    Student medStudent = new Student(
-        "Med2015001", "Gareth Houston", Student.Gender.MALE, 2);
-    studentRepository.save(engStudent);
-    studentRepository.save(medStudent);
-  }
-
+  
   @GetMapping("/")
   public ResponseEntity getAllStudent() {
     List<Student> students = new ArrayList<>();
@@ -52,9 +43,16 @@ public class StudentController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity updateStudent(@PathVariable("id") String id,@RequestBody Student student) {
-    Student newStudent=studentRepository.save(student);
-    return new ResponseEntity<>(newStudent,HttpStatus.ACCEPTED);
+  public ResponseEntity updateStudent(@PathVariable("id") String id,@RequestBody Student studentDto) {
+    studentRepository.findById(id).ifPresentOrElse((student1) -> {
+      student1.setName(studentDto.getName());
+      student1.setGender(studentDto.getGender());
+      student1.setGrade(studentDto.getGrade());
+      studentRepository.save(student1);
+    },()->{
+      studentRepository.save(studentDto);
+    });
+    return new ResponseEntity<>(studentDto,HttpStatus.ACCEPTED);
   }
 
   @DeleteMapping("/{id}")
